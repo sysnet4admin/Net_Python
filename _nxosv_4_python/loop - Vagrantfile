@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  N = 5 # max number of nxos
+  
+  #NXOSv 7 version -0
+  (0..N).each do |i|
+    config.vm.define "nxosv25#{i}" do |cfg|
+      cfg.vm.box = "sysnet4admin/nxosv_v7"
+      cfg.ssh.insert_key = false 
+      cfg.vm.boot_timeout = 480
+      cfg.vm.guest = :freebsd
+      #cfg.vbguest.auto_update = false
+      cfg.vm.network "forwarded_port", guest: 22, host: 6025#{i}, auto_correct: true, id: "ssh"
+      cfg.vm.network "private_network", ip: "192.168.3.25#{i}"
+      #cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+      #cfg.vm.provision "shell", inline: "sudo ifconfig Eth1-1 inet 192.168.3.25#{i} netmask 255.255.255.0"
+      #cfg.ssh.sudo_command = "ifconfig Eth1-1 inet 192.168.3.25#{i} netmask 255.255.255.0 %c"
+     
+      #VM name & HW config
+      cfg.vm.provider "virtualbox" do |vb|
+        vb.name = "NXOSv25#{i}(github_SysNet4Admin)"
+        vb.customize ["modifyvm", :id, "--groups", "/NX-OSv_Automation(github-SysNet4Admin)"]
+        vb.memory = 4096
+        vb.customize ["modifyvm", :id, "--uartmode1", "server", '\\\.\pipe\nxosv25#{i}']
+        vb.customize ['modifyvm', :id,'--nicpromisc2','allow-all']
+        vb.customize ['modifyvm', :id,'--nicpromisc3','allow-all']
+        vb.customize ['modifyvm', :id,'--nicpromisc4','allow-all']
+      end 
+    end 
+  end
+end

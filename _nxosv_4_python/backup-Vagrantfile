@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  #NXOSv 7 version 
+  config.vm.define "nxosv251" do |cfg|
+     cfg.vm.box = "sysnet4admin/nxosv_v7"
+     cfg.ssh.insert_key = false 
+     cfg.vm.boot_timeout = 480
+     cfg.vm.guest = :freebsd
+     #cfg.vbguest.auto_update = false
+     cfg.vm.network "forwarded_port", guest: 22, host: 60251, auto_correct: true, id: "ssh"
+     cfg.vm.network "private_network", ip: "192.168.3.251"
+     #cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+     #cfg.vm.provision "shell", inline: "sudo ifconfig Eth1-1 inet 192.168.3.251 netmask 255.255.255.0"
+     #cfg.ssh.sudo_command = "ifconfig Eth1-1 inet 192.168.3.251 netmask 255.255.255.0 %c"
+     
+     #VM name & HW config
+     cfg.vm.provider "virtualbox" do |vb|
+       vb.name = "NXOSv251(github_SysNet4Admin)"
+       vb.customize ["modifyvm", :id, "--groups", "/NX-OSv_Automation(github-SysNet4Admin)"]
+       vb.memory = 4096
+       vb.customize ["modifyvm", :id, "--uartmode1", "server", '\\\.\pipe\nxosv251']
+       vb.customize ['modifyvm', :id,'--nicpromisc2','allow-all']
+       vb.customize ['modifyvm', :id,'--nicpromisc3','allow-all']
+       vb.customize ['modifyvm', :id,'--nicpromisc4','allow-all']
+     end 
+  end
+  #NXOSv 9 version 
+  config.vm.define "nxosv252" do |cfg|
+     cfg.vm.box = "sysnet4admin/nxosv_v9"
+     cfg.ssh.insert_key = false 
+     cfg.vm.boot_timeout = 960
+     cfg.vm.guest = :freebsd
+     #cfg.vbguest.auto_update = false
+     cfg.vm.network "forwarded_port", guest: 22, host: 60252, auto_correct: true, id: "ssh"
+     cfg.vm.network "private_network", virtualbox__intnet: true 
+     cfg.vm.provision "shell", inline: "sudo ifconfig Eth1-1 inet 192.168.3.252 netmask 255.255.255.0"
+     cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+
+     #VM name & HW config
+     cfg.vm.provider "virtualbox" do |vb|
+       vb.name = "NXOSv252(github_SysNet4Admin)"
+       vb.customize ["modifyvm", :id, "--groups", "/NX-OSv_Automation(github-SysNet4Admin)"]
+       vb.memory = 4096
+       vb.customize ["modifyvm", :id, "--uartmode1", "server", '\\\.\pipe\nxosv252']
+	   vb.customize ['modifyvm', :id,'--nicpromisc2','allow-all']
+       vb.customize ['modifyvm', :id,'--nicpromisc3','allow-all']
+       vb.customize ['modifyvm', :id,'--nicpromisc4','allow-all']
+	 end 
+  end
+
+  #===============================#
+  # SDN-Controller (CentOS-Based) #
+  #===============================#
+  
+  config.vm.define "SDN-CTRL" do |cfg|
+    cfg.vm.box = "sysnet4admin/CentOS-k8s"
+    cfg.vm.host_name = "nxos-ctrl"
+    cfg.vm.network "private_network", ip: "192.168.3.10"
+    cfg.vm.network "forwarded_port", guest: 22, host: 60010, auto_correct: true, id: "ssh"
+    cfg.vm.synced_folder "../data", "/vagrant", disabled: true
+    cfg.ssh.sudo_command = "mkdir hoonjo"
+    #cfg.vm.provision "shell", inline: "yum install epel-release git vim-enhanced -y"
+    cfg.vm.provider "virtualbox" do |vb|
+        vb.name = "SDN-CTRL(github_SysNet4Admin)"
+        vb.customize ["modifyvm", :id, "--groups", "/NX-OSv_Automation(github-SysNet4Admin)"]
+        vb.memory = 1024
+    end
+  end
+  
+end
